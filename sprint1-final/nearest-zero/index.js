@@ -1,3 +1,4 @@
+// https://contest.yandex.ru/contest/22450/run-report/87350893/
 const readline = require("readline");
 const fs = require("fs");
 
@@ -10,13 +11,17 @@ readline
     })
     .on("line", line => {
         if (currentLine === 1) {
-            numbers = line.split(/\s/).map(s => parseInt(s));
+            numbers = parseInputString(line);
         }
         currentLine++;
     })
     .on("close", solve);
 
-function solve() {
+function parseInputString(line) {
+    return line.split(/\s/).map(s => parseInt(s));
+}
+
+function countDistance(numbers) {
     const max = numbers.length;
     const distance = new Array(numbers.length).fill(max);
     for (let i = 0, j = numbers.length - 1; i < numbers.length, j >= 0; i++, j--) {
@@ -31,5 +36,10 @@ function solve() {
             distance[j] = Math.min(distance[j], j + 1 === max ? max : distance[j + 1] + 1);
         }
     }
+    return distance;
+}
+
+function solve() {
+    const distance = countDistance(numbers);
     console.log(distance.join(" "));
 }
