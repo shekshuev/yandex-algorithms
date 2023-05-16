@@ -1,10 +1,11 @@
-// https://contest.yandex.ru/contest/22450/run-report/87350726/
+// https://contest.yandex.ru/contest/22450/run-report/87369601/
 const readline = require("readline");
 const fs = require("fs");
 
 let currentLine = 0;
-const keys = new Map();
-let maxPushedKeys = 0;
+let initialPushedKeys = 0;
+
+const inputRows = [];
 
 readline
     .createInterface({
@@ -12,28 +13,34 @@ readline
     })
     .on("line", line => {
         if (currentLine === 0) {
-            maxPushedKeys = parseInt(line, 10) * 2;
+            initialPushedKeys = parseInt(line, 10);
         } else {
-            accumulateInputData(line);
+            inputRows.push(line);
         }
         currentLine++;
     })
     .on("close", solve);
 
-function accumulateInputData(line) {
-    for (const key of line.split("")) {
-        if (keys.get(key)) {
-            keys.set(key, keys.get(key) + 1);
-        } else {
-            keys.set(key, 1);
+function stringArrayToMap(stringArray) {
+    const map = new Map();
+    for (const line of stringArray) {
+        for (const letter of line) {
+            if (map.get(letter)) {
+                map.set(letter, map.get(letter) + 1);
+            } else {
+                map.set(letter, 1);
+            }
         }
     }
+    return map;
 }
 
-function countScore(keysMap, maxPushedKeys) {
+function countScore(inputRows, initialPushedKeys) {
+    const keysMap = stringArrayToMap(inputRows);
+    const maxPushedKeys = initialPushedKeys * 2;
     let points = 0;
-    for (let digit of ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]) {
-        if (keysMap.get(digit) <= maxPushedKeys) {
+    for (let i = 1; i <= 9; i++) {
+        if (keysMap.get(`${i}`) <= maxPushedKeys) {
             points++;
         }
     }
@@ -41,6 +48,6 @@ function countScore(keysMap, maxPushedKeys) {
 }
 
 function solve() {
-    const points = countScore(keys, maxPushedKeys);
+    const points = countScore(inputRows, initialPushedKeys);
     console.log(points);
 }

@@ -1,4 +1,4 @@
-// https://contest.yandex.ru/contest/22450/run-report/87350893/
+https://contest.yandex.ru/contest/22450/run-report/87368300/
 const readline = require("readline");
 const fs = require("fs");
 
@@ -11,14 +11,14 @@ readline
     })
     .on("line", line => {
         if (currentLine === 1) {
-            numbers = parseInputString(line);
+            numbers = parseInputStringToNumericArray(line);
         }
         currentLine++;
     })
     .on("close", solve);
 
-function parseInputString(line) {
-    return line.split(/\s/).map(s => parseInt(s));
+function parseInputStringToNumericArray(line) {
+    return line.split(/\s/).map(s => parseInt(s, 10));
 }
 
 function countDistance(numbers) {
