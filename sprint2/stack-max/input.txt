@@ -1,0 +1,30 @@
+50
+get_max
+pop
+push -7
+pop
+get_max
+get_max
+get_max
+get_max
+push 1
+get_max
+get_max
+push 3
+pop
+pop
+get_max
+get_max
+get_max
+push -3
+get_max
+get_max
+push 0
+push 9
+get_max
+get_max
+pop
+get_max
+push 4
+get_max
+pop
