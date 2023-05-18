@@ -1,0 +1,9 @@
+8
+get
+size
+size
+size
+put 50
+put 60
+put 89
+put 72
