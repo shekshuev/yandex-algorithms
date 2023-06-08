@@ -1,33 +1,22 @@
 /*
 -- РЕШЕНИЕ --
-https://contest.yandex.ru/contest/23815/run-report/88004603/
+https://contest.yandex.ru/contest/23815/run-report/88045353/
 
 -- ПРИНЦИП РАБОТЫ --
-1. Функция brokenSearch состоит из двух функций binarySearch и 
-   searchBrokenIndex.
-2. Функция binarySearch - обычный двоичный поиск в отсортированном 
-   массиве. Поскольку исходный массив частично отсортирован - 
-   состоит из двух отсортированных массивов, то на вход этой функции 
-   необходимо передать как раз один из них.
-3. Чтобы определить, в каком подмассиве искать, существует функция 
-   searchBrokenIndex. Принцип ее работы: аналогично двоичному 
-   поиску разбиваем массив, идем в первую половину и смотрим, 
-   отсортирована ли она или нет (верхний if). Если да, проверяем, 
-   входит ли в границы искомый элемент. Если да, возвращаем границы,
-   нет - ищем в другой половине. И аналогично по верхнему условию,
-   если первая половина не отсортирована, ищем во второй.
+Функция brokenSearch реализует поиск посредством метода двух указателей
+поиск в сломанном массиве. На каждой итерации выбирается средний элемент, 
+и проверяются левые и правые половины. Сломанная часть отбрасывается путем 
+сдвига указателя left или right.
 
 
 -- ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ --
-Алгоритм двоичного поиска работает только на отсортированном массиве.
-Нахождение места "поломки" (а по условию она одна) гарантирует получение
-отсортированного подмассива, к которому двоичный поиск применим.
+Алгоритм реализует двоичный поиск без рекурсии. На каждой итерации цикла
+отбрасывается половина элементов, которая "поломана" или которая точно
+не содержит искомый элемент.
 
 -- ВРЕМЕННАЯ СЛОЖНОСТЬ --
-На исходном массиве длинны n два раза запускается двоичный поиск, 
-сложность каждого O(log n). Поскольку их два, то общая сложность 
-O(log n + log n) = O(log n^2) = O(2 log n). Без учета констант 
-итоговая сложность O(log n).
+На исходном массиве длинны n запускается итерационная версия двоичного 
+поиска, сложность каждого O(log n). Итоговая сложность также O(log n).
 
 -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
 В памяти содержится массив размера n. Никаких иных выделений памяти
@@ -35,42 +24,30 @@ O(log n + log n) = O(log n^2) = O(2 log n). Без учета констант
 */
 
 function brokenSearch(arr, k) {
-    function binarySearch(arr, k, left, right) {
-        if (right <= left) {
-            return -1;
-        }
-        const mid = Math.floor((right + left) / 2);
+    let left = 0;
+    let right = arr.length - 1;
+
+    while (left <= right) {
+        let mid = Math.floor((left + right) / 2);
+
         if (arr[mid] === k) {
             return mid;
-        } else if (k < arr[mid]) {
-            return binarySearch(arr, k, left, mid);
-        } else {
-            return binarySearch(arr, k, mid + 1, right);
         }
-    }
-
-    function searchBrokenIndex(arr, k, left, right) {
-        if (right - left === 1) {
-            return [left, right];
-        }
-        const mid = Math.floor((right + left) / 2);
         if (arr[left] <= arr[mid]) {
-            if (k >= arr[left] && k <= arr[mid]) {
-                return [left, mid + 1];
+            if (k >= arr[left] && k < arr[mid]) {
+                right = mid - 1;
             } else {
-                return searchBrokenIndex(arr, k, mid, right);
+                left = mid + 1;
             }
         } else {
-            if (k >= arr[mid] && k <= arr[right - 1]) {
-                return [mid, right];
+            if (k > arr[mid] && k <= arr[right]) {
+                left = mid + 1;
             } else {
-                return searchBrokenIndex(arr, k, left, mid);
+                right = mid - 1;
             }
         }
     }
-
-    const [left, right] = searchBrokenIndex(arr, k, 0, arr.length);
-    return binarySearch(arr, k, left, right);
+    return -1;
 }
 
 function test() {

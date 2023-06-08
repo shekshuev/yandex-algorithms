@@ -1,6 +1,6 @@
 /*
 -- РЕШЕНИЕ --
-https://contest.yandex.ru/contest/23815/run-report/88029801/
+https://contest.yandex.ru/contest/23815/run-report/88044771/
 
 -- ПРИНЦИП РАБОТЫ --
 1. Создан вспомогательный класс Participant для хранения данных
@@ -29,11 +29,17 @@ https://contest.yandex.ru/contest/23815/run-report/88029801/
 необходимо пройти весь массив, чтобы раскидать элементы относительно
 опорного, т.е. сделать n шагов. Итоговая сложность - O(n log n). 
 Если опорный элемент будет выбран неудачно, то сложность может 
-дойти до O(n^2), если на каждом шаге не будет получаться разбить массив.
+дойти до O(n^2), если на каждом шаге не будет получаться разбить 
+массив на две равный части и одна из частей будет содержать 
+до количества элементов в текущем рэндже.
 
 -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
 В памяти содержится массив размера n. Никаких иных выделений памяти
-не происходит. Т.о. пространственная сложность O(n).
+не происходит. Глубина стека вызовов log n. В стек записываются 
+параметры, адрес возврата и сама вызванная функция, условно 6 элементов
+в памяти. Т.о. пространственная сложность O(n + log n + 6). При бесконечно
+больших n прямая сильно уйдет вверх от логарифма, поэтому итоговую 
+сложность можно упростить до O(n).
 */
 const readline = require("readline");
 const fs = require("fs");
@@ -64,6 +70,16 @@ class Participant {
         return new Participant(name, parseInt(points, 10), parseInt(penalty));
     }
 
+    static compare(first, second) {
+        if (first.points !== second.points) {
+            return second.points - first.points;
+        }
+        if (first.penalty !== second.penalty) {
+            return first.penalty - second.penalty;
+        }
+        return first.name.localeCompare(second.name);
+    }
+
     constructor(name, points, penalty) {
         this.name = name;
         this.points = points;
@@ -71,19 +87,7 @@ class Participant {
     }
 
     compareTo(participant) {
-        if (this.name === participant.name) {
-            return 0;
-        } else {
-            if (this.points === participant.points) {
-                if (this.penalty === participant.penalty) {
-                    return participant.name < this.name ? 1 : -1;
-                } else {
-                    return participant.penalty < this.penalty ? 1 : -1;
-                }
-            } else {
-                return participant.points < this.points ? -1 : 1;
-            }
-        }
+        return Participant.compare(this, participant);
     }
 }
 
@@ -98,15 +102,15 @@ function solve(participants) {
         arr[j] = tmp;
     };
 
-    const sort = (arr, start, end) => {
+    const quickSortInPlace = (arr, start, end, predicate) => {
         const pivot = getPivotValue(arr, start, end);
         let left = start,
             right = end;
         while (left <= right) {
-            while (arr[left].compareTo(pivot) < 0) {
+            while (predicate(arr[left], pivot) < 0) {
                 left++;
             }
-            while (arr[right].compareTo(pivot) > 0) {
+            while (predicate(arr[right], pivot) > 0) {
                 right--;
             }
             if (left <= right) {
@@ -116,14 +120,14 @@ function solve(participants) {
             }
         }
         if (start < right) {
-            sort(arr, start, right);
+            quickSortInPlace(arr, start, right, predicate);
         }
         if (end > left) {
-            sort(arr, left, end);
+            quickSortInPlace(arr, left, end, predicate);
         }
     };
 
-    sort(participants, 0, participants.length - 1);
+    quickSortInPlace(participants, 0, participants.length - 1, Participant.compare);
 
     console.log(participants.map((p) => p.name).join(os.EOL));
 }
