@@ -36,16 +36,16 @@ readline
         currentLine++;
     })
     .on("close", () => {
-        // solve(subwayExits, busStops);
+        solve(subwayExits, busStops);
         solve2();
     });
 
 function countApproximateDistance([x, y]) {
-    return Math.floor(Math.sqrt(x * x + y * y)) / 20;
+    return Math.floor(Math.sqrt(x * x + y * y) / 1000);
 }
 
 function solve2() {
-    console.log(busMap, busMap.size);
+    // console.log(busMap, busMap.size);
 
     const countDistance = ([x1, y1], [x2, y2]) => {
         return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
@@ -84,7 +84,7 @@ function solve2() {
             maxIndex = key;
         }
     }
-    console.log(maxIndex, totalStops);
+    console.log("result: " + maxIndex, "stops: " + totalStops);
 }
 
 function solve(subwayExits, busStops) {
@@ -118,5 +118,5 @@ function solve(subwayExits, busStops) {
             maxIndex = key;
         }
     }
-    console.log(maxIndex, totalStops);
+    console.log("result: " + maxIndex, "stops: " + totalStops);
 }
