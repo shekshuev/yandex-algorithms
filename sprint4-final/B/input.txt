@@ -1,0 +1,16 @@
+15
+put 20 27
+get 20
+put 20 21
+get 20
+get 20
+get -1
+get 20
+get -3
+delete 20
+get -29
+get -33
+delete -29
+get 16
+get 14
+put 29 39
