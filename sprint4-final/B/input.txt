@@ -1,16 +1,11 @@
-15
-put 20 27
-get 20
-put 20 21
-get 20
-get 20
-get -1
-get 20
-get -3
-delete 20
-get -29
-get -33
-delete -29
-get 16
-get 14
-put 29 39
+10
+get 1
+put 1 10
+put 2 4
+get 1
+get 2
+delete 2
+get 2
+put 1 5
+get 1
+delete 2

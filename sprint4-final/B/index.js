@@ -1,6 +1,6 @@
 /*
 -- РЕШЕНИЕ --
-https://contest.yandex.ru/contest/24414/run-report/88440223/
+https://contest.yandex.ru/contest/24414/run-report/88477690/
 
 -- ПРИНЦИП РАБОТЫ --
 Для создания хэш-таблицы используется функция makeHashTable. Количество 
@@ -29,15 +29,18 @@ https://contest.yandex.ru/contest/24414/run-report/88440223/
 чтения O(1) в лучшем случае, если в корзине 1 элемент и O(n) в худшем,
 если все n элементов в одной корзине. Удаление аналогично, если искомый
 элемент оказался первым в корзине - O(1), если последним и все n
-элементов в одной корзине - O(n).
+элементов в одной корзине - O(n). Описанное выше актуально для одной
+операции. Для n команд, которые подаются на вход, в лучшем случае время
+обработки будет O(n), в худшем - O(n^2).
 
 
 -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
 Для хранения хэш таблицы используется массив размером k, который содержит
 либо голову связного списка, либо null. То есть для хранения необходимо
-O(n + k) памяти. Дополнительно результат кэшируется в массив, размер 
-которого равен m - количеству входных команд - O(m). Общая
-пространственная сложность O(n + m + k);
+O(n + k) памяти. k - константа (_HASH_TABLE_SIZE), то есть ее можно
+отбросить, итого O(n). Дополнительно результат кэшируется в массив, размер 
+которого равен n, сложность - O(n). Общая пространственная сложность 
+O(n + n) = O(n).
 */
 
 const readline = require("readline");
@@ -50,11 +53,11 @@ const output = [];
 
 readline
     .createInterface({
-        input: fs.createReadStream(path.join(__dirname, "input.txt")),
+        input: fs.createReadStream(path.join(__dirname, "input.txt"))
     })
     .on("line", line => {
         if (currentLine === 0) {
-            hashTable = makeHashTable(parseInt(line, 10));
+            hashTable = makeHashTable();
         } else if (currentLine > 0) {
             const [command, key, value] = parseCommand(line);
             const result = hashTable[command](key, value);
@@ -73,6 +76,63 @@ function parseCommand(line) {
     } else {
         return [command, +key, +value];
     }
+}
+
+function makeLinkedList(key, value) {
+    const _makeNode = (key, value, next = null) => ({
+        key,
+        value,
+        next
+    });
+
+    let head = _makeNode(key, value);
+
+    const getHead = () => {
+        return head;
+    };
+
+    const get = key => {
+        let tmp = head;
+        while (tmp) {
+            if (tmp.key === key) {
+                return tmp;
+            }
+            tmp = tmp.next;
+        }
+        return null;
+    };
+
+    const addToStart = (key, value) => {
+        const tmp = head;
+        head = _makeNode(key, value, tmp);
+    };
+
+    const remove = key => {
+        let tmp = head;
+        let prev = null;
+        while (tmp) {
+            if (tmp.key === key) {
+                if (prev) {
+                    prev.next = tmp.next;
+                } else if (tmp.next) {
+                    head = tmp.next;
+                } else {
+                    head = null;
+                }
+                return tmp;
+            }
+            prev = tmp;
+            tmp = tmp?.next;
+        }
+        return null;
+    };
+
+    return {
+        getHead,
+        get,
+        addToStart,
+        remove
+    };
 }
 
 function makeHashTable() {
@@ -100,69 +160,46 @@ function makeHashTable() {
         return _getBucket(_getHash(key));
     };
 
-    const _createNode = (key, value, next = null) => {
-        return {
-            key,
-            value,
-            next,
-        };
-    };
-
     const put = (key, value) => {
         const bucket = _getBucketByKey(key);
         if (!_storage[bucket]) {
-            _storage[bucket] = _createNode(key, value);
+            _storage[bucket] = makeLinkedList(key, value);
         } else {
-            const tmp = _storage[bucket];
-            let head = tmp;
-            while (head) {
-                if (head.key === key) {
-                    head.value = value;
-                    return;
-                }
-                head = head.next;
+            const existing = _storage[bucket].get(key);
+            if (existing) {
+                existing.value = value;
+            } else {
+                _storage[bucket].addToStart(key, value);
             }
-            _storage[bucket] = _createNode(key, value, tmp);
         }
     };
 
     const get = key => {
         const bucket = _getBucketByKey(key);
-        let head = _storage[bucket];
-        while (head) {
-            if (head.key === key) {
-                return head.value;
-            }
-            head = head.next;
+        if (!_storage[bucket]) {
+            return _NONE;
+        } else {
+            return _storage[bucket].get(key)?.value || _NONE;
         }
-        return _NONE;
     };
 
     // delete - зарезервировано
     const del = key => {
         const bucket = _getBucketByKey(key);
-        let head = _storage[bucket];
-        let prev = null;
-        while (head) {
-            if (head.key === key) {
-                if (prev) {
-                    prev.next = head.next;
-                } else if (head.next) {
-                    _storage[bucket] = head.next;
-                } else {
-                    _storage[bucket] = null;
-                }
-                return head.value;
+        if (!_storage[bucket]) {
+            return _NONE;
+        } else {
+            const result = _storage[bucket].remove(key);
+            if (!_storage[bucket].getHead()) {
+                _storage[bucket] = null;
             }
-            prev = head;
-            head = head?.next;
+            return result?.value || _NONE;
         }
-        return _NONE;
     };
 
     return {
         put,
         get,
-        del,
+        del
     };
 }
