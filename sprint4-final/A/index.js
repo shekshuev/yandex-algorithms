@@ -1,6 +1,6 @@
 /*
 -- РЕШЕНИЕ --
-https://contest.yandex.ru/contest/24414/run-report/88434497/
+https://contest.yandex.ru/contest/24414/run-report/88474866/
 
 -- ПРИНЦИП РАБОТЫ --
 Для экономии памяти не используются дополнительные буферы. 
@@ -47,9 +47,9 @@ const fs = require("fs");
 const path = require("path");
 
 let currentLine = 0,
-    countDocuments = 0,
-    index = new Map(),
-    results = [];
+    textCount = 0,
+    texts = [],
+    searchStrings = [];
 
 const MAX_SEARCH_RESULT_SIZE = 5;
 
@@ -59,31 +59,35 @@ readline
     })
     .on("line", (line) => {
         if (currentLine === 0) {
-            countDocuments = parseInt(line, 10);
-        } else if (currentLine > 0 && currentLine <= countDocuments) {
-            createIndex(line, currentLine);
-        } else if (currentLine > countDocuments + 1) {
-            results.push(countRelevance(line, index));
+            textCount = parseInt(line, 10);
+        } else if (currentLine > 0 && currentLine <= textCount) {
+            texts.push(line);
+        } else if (currentLine > textCount + 1) {
+            searchStrings.push(line)
         }
         currentLine++;
     })
-    .on("close", () => printResults(results));
+    .on("close", () => solve(texts, searchStrings));
 
-function createIndex(text, textNumber) {
-    for (const word of text.split(/\s/)) {
-        if (!index.has(word)) {
-            const textMap = new Map();
-            textMap.set(textNumber, 1);
-            index.set(word, textMap);
-        } else {
-            const textMap = index.get(word);
-            if (!textMap.has(textNumber)) {
-                textMap.set(textNumber, 1);
+function createIndex(texts) {
+    const index = new Map();
+    for (const [textNumber, text] of texts.entries()) {
+        for (const word of text.split(/\s/)) {
+            if (!index.has(word)) {
+                const textMap = new Map();
+                textMap.set(textNumber + 1, 1);
+                index.set(word, textMap);
             } else {
-                textMap.set(textNumber, textMap.get(textNumber) + 1);
+                const textMap = index.get(word);
+                if (!textMap.has(textNumber + 1)) {
+                    textMap.set(textNumber + 1, 1);
+                } else {
+                    textMap.set(textNumber + 1, textMap.get(textNumber + 1) + 1);
+                }
             }
         }
     }
+    return index;
 }
 
 function countRelevance(searchString, index) {
@@ -100,10 +104,9 @@ function countRelevance(searchString, index) {
     return relevance;
 }
 
-function printResults(results) {
+function* getResults(results) {
     for (const map of results) {
-        console.log(
-            Array.from(map, ([key, value]) => ({ key, value }))
+        yield Array.from(map, ([key, value]) => ({ key, value }))
                 .sort((a, b) => {
                     if (b.value === a.value) {
                         return a.key - b.key;
@@ -112,7 +115,17 @@ function printResults(results) {
                 })
                 .slice(0, MAX_SEARCH_RESULT_SIZE)
                 .map((elem) => elem.key)
-                .join(" ")
-        );
+                .join(" ");
+    }
+}
+
+function solve(texts, searchStrings) {
+    const index = createIndex(texts);
+    const results = [];
+    for (const searchString of searchStrings) {
+        results.push(countRelevance(searchString, index));
+    }
+    for (const result of getResults(results)) {
+        console.log(result);
     }
 }
