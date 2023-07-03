@@ -9,17 +9,28 @@ class CNode {
 }
 */
 
-class CNode {  
-    constructor(value) {  
-        this.value = value;  
-        this.left = null;  
-        this.right = null;  
-    }  
-}
-
 function solution(root) {
     // Your code
     // “ヽ(´▽｀)ノ”
+    return (
+        (function check(root) {
+            if (!root) {
+                return 0;
+            }
+            const leftHeight = check(root.left);
+            if (leftHeight === -1) {
+                return -1;
+            }
+            const rightHeight = check(root.right);
+            if (rightHeight === -1) {
+                return -1;
+            }
+            if (Math.abs(leftHeight - rightHeight) > 1) {
+                return -1;
+            }
+            return Math.max(leftHeight, rightHeight) + 1;
+        })(root) !== -1
+    );
 }
 
 function test() {
