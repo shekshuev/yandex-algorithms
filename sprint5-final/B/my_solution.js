@@ -97,7 +97,20 @@ function remove(node, key) {
                 deleteParent.right = replaceNode;
             }
         }
-        if (replaceParent.value !== deleteNode.value) {
+        // if (replaceParent.value !== deleteNode.value) {
+        //     replaceNode.left = deleteNode.left;
+        //     replaceNode.right = deleteNode.right;
+        // }
+        if (replaceParent.value === deleteNode.value) {
+            if (
+                replaceParent.left &&
+                replaceParent.left.value === replaceNode.value
+            ) {
+                replaceNode.right = deleteNode.right;
+            } else {
+                replaceNode.left = deleteNode.left;
+            }
+        } else {
             replaceNode.left = deleteNode.left;
             replaceNode.right = deleteNode.right;
         }
@@ -184,8 +197,22 @@ function test() {
     // console.assert(newHead.value === 5);
     // console.assert(newHead.right === node5);
     // console.assert(newHead.right.value === 8);
-
-    var newHead = remove(null, 10);
+    // 1 4 2 3
+    // 2 2 4 5
+    // 3 6 6 7
+    // 4 1 -1 -1
+    // 5 3 -1 -1
+    // 6 5 -1 -1
+    // 7 7 -1 -1
+    // 2
+    var node7 = new Node(7, null, null);
+    var node6 = new Node(5, null, null);
+    var node5 = new Node(3, null, null);
+    var node4 = new Node(1, null, null);
+    var node3 = new Node(6, node6, node7);
+    var node2 = new Node(2, node4, node5);
+    var node1 = new Node(4, node2, node3);
+    var newHead = remove(node1, 6);
 }
 
 test();
