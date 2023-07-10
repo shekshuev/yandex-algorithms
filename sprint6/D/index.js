@@ -40,14 +40,55 @@ readline
     })
     .on("close", () => BFS(vertices, startIndex, verticesCount));
 
+function makeQueue(maxSize) {
+    const storage = new Array(maxSize).fill(null);
+
+    let _head = 0,
+        _tail = 0,
+        _size = 0;
+
+    function size() {
+        return _size;
+    }
+
+    function push(elem) {
+        if (_size < maxSize) {
+            storage[_tail] = elem;
+            _tail = (_tail + 1) % maxSize;
+            _size++;
+        } else {
+            throw new Error("error");
+        }
+    }
+
+    function pop() {
+        const tmp = peek();
+        storage[_head] = null;
+        _head = (_head + 1) % maxSize;
+        _size--;
+        return tmp;
+    }
+
+    function peek() {
+        if (_size === 0) {
+            throw new Error("None");
+        } else {
+            return storage[_head];
+        }
+    }
+
+    return { size, push, pop, peek };
+}
+
 function BFS(vertices, startIndex, verticesCount) {
     const colors = new Array(verticesCount + 1).fill(WHITE);
     const result = [];
-    const planned = [startIndex];
+    const planned = makeQueue(verticesCount);
+    planned.push(startIndex);
     colors[startIndex] = GRAY;
     result.push(startIndex);
-    while (planned.length > 0) {
-        const u = planned.shift();
+    while (planned.size() > 0) {
+        const u = planned.pop();
         if (vertices[u]?.length > 0) {
             vertices[u].sort((a, b) => a - b);
             for (const v of vertices[u]) {
