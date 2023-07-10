@@ -6,7 +6,7 @@ let currentLine = 0,
     startIndex = 0,
     edgesCount = 0,
     verticesCount = 0;
-const vertices = new Map();
+const vertices = [];
 
 const WHITE = 1;
 const GRAY = 2;
@@ -19,15 +19,15 @@ readline
     .on("line", line => {
         if (currentLine > 0 && currentLine <= edgesCount) {
             const [u, v] = line.split(/\s/).map(s => parseInt(s, 10));
-            if (vertices.has(u)) {
-                vertices.get(u).push(v);
+            if (vertices[u]) {
+                vertices[u].push(v);
             } else {
-                vertices.set(u, [v]);
+                vertices[u] = [v];
             }
-            if (vertices.has(v)) {
-                vertices.get(v).push(u);
+            if (vertices[v]) {
+                vertices[v].push(u);
             } else {
-                vertices.set(v, [u]);
+                vertices[v] = [u];
             }
         } else if (currentLine === 0) {
             const [vCount, eCount] = line.split(/\s/).map(s => parseInt(s, 10));
@@ -48,9 +48,9 @@ function BFS(vertices, startIndex, verticesCount) {
     result.push(startIndex);
     while (planned.length > 0) {
         const u = planned.shift();
-
-        if (vertices.has(u)) {
-            for (const v of vertices.get(u).sort((a, b) => a - b)) {
+        if (vertices[u]?.length > 0) {
+            vertices[u].sort((a, b) => a - b);
+            for (const v of vertices[u]) {
                 if (colors[v] === WHITE) {
                     colors[v] = GRAY;
                     planned.push(v);
