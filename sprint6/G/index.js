@@ -6,7 +6,7 @@ let currentLine = 0,
     startIndex = 0,
     edgesCount = 0,
     verticesCount = 0;
-const vertices = new Map();
+const vertices = [];
 
 const WHITE = 1;
 const GRAY = 2;
@@ -19,15 +19,15 @@ readline
     .on("line", line => {
         if (currentLine > 0 && currentLine <= edgesCount) {
             const [u, v] = line.split(/\s/).map(s => parseInt(s, 10));
-            if (vertices.has(u)) {
-                vertices.get(u).push(v);
+            if (vertices[u]) {
+                vertices[u].push(v);
             } else {
-                vertices.set(u, [v]);
+                vertices[u] = [v];
             }
-            if (vertices.has(v)) {
-                vertices.get(v).push(u);
+            if (vertices[v]) {
+                vertices[v].push(u);
             } else {
-                vertices.set(v, [u]);
+                vertices[v] = [u];
             }
         } else if (currentLine === 0) {
             const [vCount, eCount] = line.split(/\s/).map(s => parseInt(s, 10));
@@ -40,44 +40,68 @@ readline
     })
     .on("close", () => BFS(vertices, startIndex, verticesCount));
 
+function makeQueue(maxSize) {
+    const storage = new Array(maxSize).fill(null);
+
+    let _head = 0,
+        _tail = 0,
+        _size = 0;
+
+    function size() {
+        return _size;
+    }
+
+    function push(elem) {
+        if (_size < maxSize) {
+            storage[_tail] = elem;
+            _tail = (_tail + 1) % maxSize;
+            _size++;
+        } else {
+            throw new Error("error");
+        }
+    }
+
+    function pop() {
+        const tmp = peek();
+        storage[_head] = null;
+        _head = (_head + 1) % maxSize;
+        _size--;
+        return tmp;
+    }
+
+    function peek() {
+        if (_size === 0) {
+            throw new Error("None");
+        } else {
+            return storage[_head];
+        }
+    }
+
+    return { size, push, pop, peek };
+}
+
 function BFS(vertices, startIndex, verticesCount) {
     const colors = new Array(verticesCount + 1).fill(WHITE);
     const distance = new Array(verticesCount + 1).fill(null);
-    const previous = new Array(verticesCount + 1).fill(null);
-    const planned = [startIndex];
+    const planned = makeQueue(verticesCount);
+    planned.push(startIndex);
     colors[startIndex] = GRAY;
     distance[startIndex] = 0;
-    while (planned.length > 0) {
-        const u = planned.shift();
-        if (vertices.has(u)) {
-            for (const v of vertices.get(u).sort((a, b) => a - b)) {
+    let max = 0;
+    while (planned.size() > 0) {
+        const u = planned.pop();
+        if (vertices[u]?.length > 0) {
+            vertices[u].sort((a, b) => a - b);
+            for (const v of vertices[u]) {
                 if (colors[v] === WHITE) {
                     colors[v] = GRAY;
                     distance[v] = distance[u] + 1;
-                    previous[v] = u;
+                    max = distance[v] > max ? distance[v] : max;
                     planned.push(v);
                 }
             }
         }
         colors[u] = BLACK;
-    }
-    const path = (s, v, previous) => {
-        let path = 0;
-        let current = v;
-        while (current) {
-            path++;
-            current = previous[current];
-            if (current === s) {
-                return path;
-            }
-        }
-        return 0;
-    };
-
-    let max = 0;
-    for (const v of vertices.keys()) {
-        let tmp = path(startIndex, v, previous);
-        max = tmp > max ? tmp : max;
     }
     console.log(max);
 }
