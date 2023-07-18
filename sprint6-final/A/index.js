@@ -1,8 +1,45 @@
+/*
+-- РЕШЕНИЕ --
+https://contest.yandex.ru/contest/25070/run-report/89116393/
+
+-- ПРИНЦИП РАБОТЫ --
+1. Алгоритм реализован в соответствии с описанием алгоритма Прима.
+   Дополнительно реализована неубывающая куча для хранения ребер, 
+   исходящих из остовного дерева, что позволяет за минимальное время
+   доставать максимальное по весу ребро.
+2. Функций makeMaxHeap создает неубывающую кучу, сравнивая элементы
+   по компаратору. 
+
+
+-- ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ --
+Считаю, что доказательство корректности приведено в описании задания.
+Для корректной работы необходимо, чтобы была правильно реализована
+неубывающая куча и функция-компаратор для сравнения элементов в куче.
+
+-- ВРЕМЕННАЯ СЛОЖНОСТЬ --
+На считывание данных необходимо O(|E|) времени, поскольку граф
+хранится в мапе. Алгоритм Прима работает за O(|V| * |E|) в общем 
+случае, если для хранения ребер использовать линейные структуры 
+данных. В данной реализации используется куча. Сложность операций 
+по извлечению и вставке элементов в куче - O(log n). В данном случае 
+n = |V|. Таким образом, общая сложность алгоритма Прима в данной 
+реализации - O(|E| + |E| * log |V|).
+
+
+-- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
+Итого общая пространственная сложность кучи O(n). При n = |V| 
+столько памяти будет занято в худшем случае на первой итерации
+при полносвязном графе. Граф представлен в виде списков смежности
+и занимает памяти O(|V| + |E|). Дополнительно используются структуры 
+данных, каждая из которых занимает не больше O(|V|). Таким образом, 
+общая пространственная сложность O(|V| + |E|).
+*/
 const readline = require("readline");
 const fs = require("fs");
 const path = require("path");
 
 let currentLine = 0,
+    verticesCount = 0,
     edgesCount = 0;
 const graph = new Map();
 
@@ -13,31 +50,25 @@ readline
     .on("line", line => {
         if (currentLine > 0 && currentLine <= edgesCount) {
             const [u, v, l] = line.split(/\s/).map(s => parseInt(s, 10));
-            if (!graph.has(u)) {
-                graph.set(u, makeMaxHeap(Vertex.compare));
-            }
-            if (!graph.has(v)) {
-                graph.set(v, makeMaxHeap(Vertex.compare));
-            }
-            graph.get(u).push(new Vertex(u, v, l));
-            graph.get(v).push(new Vertex(v, u, l));
+            graph.get(u).push(new Edge(u, v, l));
+            graph.get(v).push(new Edge(v, u, l));
         } else if (currentLine === 0) {
-            const [_, eCount] = line.split(/\s/).map(s => parseInt(s, 10));
+            const [vCount, eCount] = line.split(/\s/).map(s => parseInt(s, 10));
+            verticesCount = vCount;
             edgesCount = eCount;
+            for (let i = 1; i <= verticesCount; i++) {
+                graph.set(i, []);
+            }
         }
         currentLine++;
     })
     .on("close", () => findMaximumSpanningTree(graph));
 
-class Vertex {
+class Edge {
     constructor(begin, end, weight) {
         this.begin = begin;
         this.end = end;
         this.weight = weight;
-    }
-
-    static compare(v1, v2) {
-        return v2.weight - v1.weight;
     }
 }
 
@@ -102,49 +133,46 @@ function makeMaxHeap(comparator) {
     return {
         push,
         pop,
-        getSize,
-        _heap
+        getSize
     };
 }
 
 function findMaximumSpanningTree(graph) {
-    const notAdded = new Set(graph.keys());
+    const mst = [];
     const added = new Set();
-    const mst = new Map();
+    const notAdded = new Set(graph.keys());
+    const edges = makeMaxHeap((e1, e2) => e2.weight - e1.weight);
 
     const addVertex = v => {
-        added.add(v.end);
-        notAdded.delete(v.end);
-        mst.set(v.begin, v);
-    };
-
-    const getVertexToStart = () => {
-        let vertex = null;
-        for (const v of notAdded.values()) {
-            vertex = graph.get(v)?.pop();
-            break;
-        }
-        return vertex;
-    };
-
-    let v = getVertexToStart();
-
-    while (notAdded.size > 0 || graph.get(v?.end)?.getSize() === 0) {
         if (v) {
-            addVertex(v);
-            v = graph.get(v.end).pop();
-        } else {
-            v = getVertexToStart();
+            added.add(v);
+            notAdded.delete(v);
+            for (const edge of graph
+                .get(v)
+                .filter(edge => notAdded.has(edge.end))) {
+                edges.push(edge);
+            }
+        }
+    };
+
+    const v = graph.keys().next().value;
+    addVertex(v);
+
+    while (notAdded.size > 0 && edges.getSize() > 0) {
+        const e = edges.pop();
+        if (notAdded.has(e.end)) {
+            mst.push(e);
+            addVertex(e.end);
         }
     }
 
-    if (notAdded.size === 0 && added.size > 0) {
+    if (notAdded.size > 0) {
+        console.log("Oops! I did it again");
+    } else {
         let total = 0;
-        for (const w of mst.values()) {
-            total += w.weight;
+        for (const edge of mst) {
+            total += edge.weight;
         }
         console.log(total);
-    } else {
-        console.log("Oops! I did it again");
     }
 }
