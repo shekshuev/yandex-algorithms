@@ -1,6 +1,6 @@
 /*
 -- РЕШЕНИЕ --
-https://contest.yandex.ru/contest/25070/run-report/89135545/
+https://contest.yandex.ru/contest/25070/run-report/89147527/
 
 -- ДИСКЛЕЙМЕР --
 Условие задачи крайне непонятные. Сам я у решению так и не пришел.
@@ -34,8 +34,9 @@ https://contest.yandex.ru/contest/25069/run-report/88914588/.
 
 -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
 Граф представлен в виде списков смежности и занимает памяти 
-O(|V| + |E|). Дополнительно используется массив цветов размером O(|V|). 
-Общая пространственная сложность O(2 * |V| + |E|) = O(|V| + |E|).
+O(|V| + |E|). Дополнительно используется массив цветов размером O(|V|),
+а также массив для хранения исходных данных размером O(|V|).
+Общая пространственная сложность O(3 * |V| + |E|) = O(|V| + |E|).
 */
 
 const readline = require("readline");
@@ -43,11 +44,13 @@ const fs = require("fs");
 const path = require("path");
 
 let currentLine = 0;
-const vertices = new Map();
+const input = [];
 
-const WHITE = 1;
-const GRAY = 2;
-const BLACK = 3;
+const WHITE = 1; // vertex is not visited
+const GRAY = 2; // vertex is visiting
+const BLACK = 3; // vertex is processed
+
+const REVERSE_ROAD = "B";
 
 readline
     .createInterface({
@@ -55,22 +58,28 @@ readline
     })
     .on("line", line => {
         if (currentLine > 0) {
-            for (let i = 0; i < line.length; i++) {
-                if (line[i] === "B") {
-                    vertices.get(currentLine).push(i + currentLine + 1);
-                } else {
-                    vertices.get(i + currentLine + 1).push(currentLine);
-                }
-            }
-        } else if (currentLine === 0) {
-            const verticesCount = parseInt(line, 10);
-            for (let i = 1; i <= verticesCount; i++) {
-                vertices.set(i, []);
-            }
+            input.push(line);
         }
         currentLine++;
     })
-    .on("close", () => solve(vertices));
+    .on("close", () => solve(input));
+
+function parseInputToVertices(input) {
+    const vertices = new Map();
+    for (let i = 0; i < input.length + 1; i++) {
+        vertices.set(i, []);
+    }
+    for (let i = 0; i < input.length; i++) {
+        for (let j = 0; j < input[i].length; j++) {
+            if (input[i][j] === REVERSE_ROAD) {
+                vertices.get(i).push(j + i + 1);
+            } else {
+                vertices.get(j + i + 1).push(i);
+            }
+        }
+    }
+    return vertices;
+}
 
 function checkFoCycleUsingDFS(vertices, colors, startIndex) {
     const stack = [startIndex];
@@ -83,23 +92,24 @@ function checkFoCycleUsingDFS(vertices, colors, startIndex) {
                 if (colors[w] === WHITE) {
                     stack.push(w);
                 } else if (colors[w] === GRAY) {
-                    return true;
+                    throw new Error();
                 }
             }
         } else if (colors[v] === GRAY) {
             colors[v] = BLACK;
         }
     }
-    return false;
 }
 
-function solve(vertices) {
+function solve(input) {
+    const vertices = parseInputToVertices(input);
     const colors = new Array(vertices.size + 1).fill(WHITE);
-    for (let i = 1; i < vertices.size; i++) {
-        if (checkFoCycleUsingDFS(vertices, colors, i)) {
-            console.log("NO");
-            return;
+    try {
+        for (let i = 1; i < vertices.size; i++) {
+            checkFoCycleUsingDFS(vertices, colors, i);
         }
+        console.log("YES");
+    } catch {
+        console.log("NO");
     }
-    console.log("YES");
 }

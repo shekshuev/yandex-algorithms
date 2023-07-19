@@ -1,6 +1,6 @@
 /*
 -- РЕШЕНИЕ --
-https://contest.yandex.ru/contest/25070/run-report/89116393/
+https://contest.yandex.ru/contest/25070/run-report/89146935/
 
 -- ПРИНЦИП РАБОТЫ --
 1. Алгоритм реализован в соответствии с описанием алгоритма Прима.
@@ -23,7 +23,7 @@ https://contest.yandex.ru/contest/25070/run-report/89116393/
 данных. В данной реализации используется куча. Сложность операций 
 по извлечению и вставке элементов в куче - O(log n). В данном случае 
 n = |V|. Таким образом, общая сложность алгоритма Прима в данной 
-реализации - O(|E| + |E| * log |V|).
+реализации - O(|E| + |E| * log |V|) = O(|E| * log |V|).
 
 
 -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
@@ -42,6 +42,7 @@ let currentLine = 0,
     verticesCount = 0,
     edgesCount = 0;
 const graph = new Map();
+const ERROR_MESSAGE = "Oops! I did it again";
 
 readline
     .createInterface({
@@ -62,7 +63,7 @@ readline
         }
         currentLine++;
     })
-    .on("close", () => findMaximumSpanningTree(graph));
+    .on("close", () => solve(graph));
 
 class Edge {
     constructor(begin, end, weight) {
@@ -167,12 +168,21 @@ function findMaximumSpanningTree(graph) {
     }
 
     if (notAdded.size > 0) {
-        console.log("Oops! I did it again");
+        throw new Error(ERROR_MESSAGE);
     } else {
         let total = 0;
         for (const edge of mst) {
             total += edge.weight;
         }
-        console.log(total);
+        return total;
+    }
+}
+
+function solve(graph) {
+    try {
+        const result = findMaximumSpanningTree(graph);
+        console.log(result);
+    } catch (e) {
+        console.log(e.message);
     }
 }
