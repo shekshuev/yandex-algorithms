@@ -10,7 +10,7 @@ readline
         input: fs.createReadStream(path.join(__dirname, "input.txt"))
     })
     .on("line", line => {
-        if (currentLine > 0) {
+        if (currentLine > 0 && line.length > 0) {
             field.unshift(line.split("").map(s => parseInt(s, 10)));
         }
         currentLine++;
