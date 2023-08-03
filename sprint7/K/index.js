@@ -31,20 +31,20 @@ function solve([first, second]) {
         }
     }
     console.log(dp[N][M]);
-    if (dp[N][M] > 1) {
+    if (dp[N][M] > 0) {
         const answer1 = [],
             answer2 = [];
         let i = N,
             j = M;
-        while (i > 1 || j > 1) {
+        while (dp[i][j] !== 0) {
             if (first[i - 1] === second[j - 1]) {
                 answer1.push(i);
                 answer2.push(j);
                 i--;
                 j--;
-            } else if (dp[i][j] === dp[i][j - 1] && j > 0) {
+            } else if (dp[i][j] === dp[i][j - 1]) {
                 j--;
-            } else if (dp[i][j] === dp[i - 1][j] && i > 0) {
+            } else if (dp[i][j] === dp[i - 1][j]) {
                 i--;
             }
         }
