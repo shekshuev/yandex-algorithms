@@ -1,6 +1,6 @@
 /*
 -- РЕШЕНИЕ --
-https://contest.yandex.ru/contest/26133/run-report/89463842/
+https://contest.yandex.ru/contest/26133/run-report/89485566/
 
 -- ПРИНЦИП РАБОТЫ --
 1. Для распаковки строки используется функция unpack, по принципу 
@@ -19,15 +19,18 @@ https://contest.yandex.ru/contest/26133/run-report/89463842/
 -- ВРЕМЕННАЯ СЛОЖНОСТЬ --
 На считывание данных необходимо в среднем O(n * l) времени,
 где n - количество строк, l - средняя длина строки. Распаковка
-работает за O(n * l). Поиск также работает за O(n * l) в худшем 
+работает за ~O(n * l). В худшем случае O(n * k ^ m), k - 
+коэффициент повтора строки от 0 до 9, m - глубина запаковки.
+9[a9[b9[c]]] -> k=9, m = 3. Поиск работает за O(n * t) в худшем 
 случае - если все строки равны и необходимо перебрать все
-символы всех строк. Итого - O(n * l).
+символы всех строк, t - длина распакованной строки. 
+Итого - O(n * t + n * l) = ~O(n * t).
 
 
 -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
 На хранение исходных данных необходимо O(n * l), для хранения 
-распакованных строк еще O(n * l). Также отдельно хранится 
-базовая строка - O(l). Итого - O(n * l).
+на каждой итерации распакованной строки еще O(l). Также отдельно 
+хранится базовая строка - O(l). Итого - O(n * l).
 */
 const readline = require("readline");
 const fs = require("fs");
@@ -55,18 +58,26 @@ const END_DIGIT = "9";
 const OPEN_BRACKET = "[";
 const CLOSE_BRACKET = "]";
 
+function isNumericChar(char) {
+    return char >= BEGIN_DIGIT && char <= END_DIGIT;
+}
+
+function isAlphaChar(char) {
+    return char >= BEGIN_LETTER && char <= END_LETTER;
+}
+
 function unpack(str) {
     const cache = [];
     const multipliers = [];
     const insertions = [];
     for (const letter of str) {
-        if (letter >= BEGIN_LETTER && letter <= END_LETTER) {
+        if (isAlphaChar(letter)) {
             if (multipliers.length === 0) {
                 cache.push(letter);
             } else {
                 insertions[insertions.length - 1].push(letter);
             }
-        } else if (letter >= BEGIN_DIGIT && letter <= END_DIGIT) {
+        } else if (isNumericChar(letter)) {
             multipliers.push(+letter);
         } else if (letter === OPEN_BRACKET) {
             insertions.push([]);
@@ -95,25 +106,26 @@ function findMaxCommonPrefix(strings) {
     } else if (strings.length === 1) {
         return unpack(strings[0]);
     } else {
-        let prefix = 0;
-        const unpacked = strings.map(string => unpack(string));
-        const base = unpacked[0];
-        while (true) {
-            let flag = false;
-            for (let i = 1; i < strings.length; i++) {
-                const current = unpacked[i];
+        let maxPrefix = -1;
+        const base = unpack(strings[0]);
+        for (let i = 1; i < strings.length; i++) {
+            const current = unpack(strings[i]);
+            let prefix = 0;
+            while (true) {
                 if (!current[prefix] || current[prefix] !== base[prefix]) {
-                    flag = true;
                     break;
+                } else {
+                    prefix++;
                 }
             }
-            if (flag) {
-                break;
-            } else {
-                prefix++;
-            }
+            maxPrefix =
+                maxPrefix === -1
+                    ? prefix
+                    : maxPrefix > prefix
+                    ? prefix
+                    : maxPrefix;
         }
-        return base.substring(0, prefix);
+        return base.substring(0, maxPrefix);
     }
 }
 
