@@ -48,10 +48,8 @@ function solve([text, pattern, replacement]) {
         cache.push(replacement);
         start = pattern.length + pos;
     }
-    if (positions[positions.length - 1] < text.length) {
-        cache.push(
-            text.substring(positions[positions.length - 1] + pattern.length)
-        );
+    if (start < text.length) {
+        cache.push(text.substring(start, text.length));
     }
     console.log(cache.join(""));
 }
